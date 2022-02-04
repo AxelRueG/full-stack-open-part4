@@ -3,11 +3,13 @@ const app = express()
 const cors = require('cors')
 require('dotenv').config()
 const mongoose = require('mongoose')
+require('express-async-errors')
 const { findBlogs, addBlog } = require('./controllers/blog')
 const {requestLogger, unknownEndpoint, errorHandler} = require('./utils/middlewares')
 
 // DB connection
-const mongoUrl = process.env.DB_URI
+let mongoUrl = process.env.DB_URI
+if (process.env.NODE_ENV === 'test') process.env.DB_TEST_URI
 mongoose
   .connect(mongoUrl)
   .then(() => console.log('DB conected'))
