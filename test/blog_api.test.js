@@ -55,9 +55,14 @@ beforeEach(async () => {
   await Promise.all(promiseArray)
 },90000)
 
-test('all notes are returned', async () => {
+test('all blogs are returned', async () => {
   const response = await API.get('/api/blogs')
   expect(response.body).toHaveLength(initialBlogs.length)
+})
+
+test('all blogs has an id', async () => {
+  const response = await API.get('/api/blogs')
+  expect(response.body[0].id).not.toBe(undefined)
 })
 
 afterAll(() => mongoose.connection.close())
