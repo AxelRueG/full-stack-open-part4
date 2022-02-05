@@ -55,7 +55,7 @@ beforeEach(async () => {
 	await Promise.all(promiseArray);
 }, 90000);
 
-describe('get methods in api/blogs', () => {
+describe('get all blogs', () => {
 	test('all blogs are returned', async () => {
 		const response = await API.get('/api/blogs');
 		expect(response.body).toHaveLength(initialBlogs.length);
@@ -67,7 +67,7 @@ describe('get methods in api/blogs', () => {
 	});
 });
 
-describe('post methods in api/blogs', () => {
+describe('adding a new blog', () => {
 	const blog = {
 		title: 'yarn vs npm, todo lo que necesitas saber',
 		author: '4Developers',
@@ -93,6 +93,17 @@ describe('post methods in api/blogs', () => {
     const data = {...result.body, ...blog}
 		expect(result.body).toEqual(data);
 	});
+
+  test('when the like number is not defined, its zero for dafault', async () => {
+    const data = {...blog, likes: undefined}
+    const result = await API.post('/api/blogs').send(data).expect(201)
+    expect(result.body.likes).toBe(0)
+  })
+
+  test('when title and url its not defined, throw status 400', async () => {
+    const data = {...blog, title: '', url: ''}
+    await API.post('/api/blogs').send(data).expect(400)
+  })
 });
 
 afterAll(() => mongoose.connection.close());

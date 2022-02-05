@@ -5,15 +5,10 @@ const findBlogs = async (request, response) => {
   response.json(blogs)
 }
 
-const addBlog = (request, response, next) => {
+const addBlog = async (request, response) => {
   const blog = new Blog(request.body)
-
-  blog
-    .save()
-    .then(result => {
-      response.status(201).json(result)
-    })
-    .catch(e => next(e))
+  const result = await blog.save()
+  response.status(201).json(result)
 }
 
 module.exports = {findBlogs, addBlog}
