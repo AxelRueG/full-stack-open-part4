@@ -76,34 +76,57 @@ describe('adding a new blog', () => {
 	};
 
 	test('the blog is added in DB', async () => {
-		await API.post('/api/blogs')
-			.send(blog)
+		await API.post('/api/blogs').send(blog);
 
 		const result = await API.get('/api/blogs');
-    const len = initialBlogs.length + 1
+		const len = initialBlogs.length + 1;
 		expect(result.body).toHaveLength(len);
 	});
 
 	test('the containt is saved successfully', async () => {
-		const result = await API.post('/api/blogs')
-			.send(blog)
-      .expect(201)
+		const result = await API.post('/api/blogs').send(blog).expect(201);
 
-    // use the data of blog more the id asigned
-    const data = {...result.body, ...blog}
+		// use the data of blog more the id asigned
+		const data = { ...result.body, ...blog };
 		expect(result.body).toEqual(data);
 	});
 
-  test('when the like number is not defined, its zero for dafault', async () => {
-    const data = {...blog, likes: undefined}
-    const result = await API.post('/api/blogs').send(data).expect(201)
-    expect(result.body.likes).toBe(0)
-  })
+	test('when the like number is not defined, its zero for dafault', async () => {
+		const data = { ...blog, likes: undefined };
+		const result = await API.post('/api/blogs').send(data).expect(201);
+		expect(result.body.likes).toBe(0);
+	});
 
-  test('when title and url its not defined, throw status 400', async () => {
-    const data = {...blog, title: '', url: ''}
-    await API.post('/api/blogs').send(data).expect(400)
-  })
+	test('when title and url its not defined, throw status 400', async () => {
+		const data = { ...blog, title: '', url: '' };
+		await API.post('/api/blogs').send(data).expect(400);
+	});
+});
+
+describe('deleting a blog', () => {
+	test('when one is removed, the length of blogs is subtract', async () => {
+		const blog = await Blog.findOne();
+		const id = blog._id.toString();
+
+		await API.delete(`/api/blogs/${id}`);
+
+		const result = await API.get('/api/blogs');
+		const len = initialBlogs.length - 1;
+		expect(result.body).toHaveLength(len);
+	});
+});
+
+describe('updating likes of the blog', () => {
+	test('when updating likes, the new number of likes is returned', async () => {
+		const blog = await Blog.findOne();
+		const id = blog._id.toString();
+
+		const nl = { likes: 200 };
+
+		const result = await API.put(`/api/blogs/${id}`).send(nl).expect(201);
+
+		expect(result.body.likes).toBe(200);
+	});
 });
 
 afterAll(() => mongoose.connection.close());

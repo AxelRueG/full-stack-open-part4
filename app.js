@@ -4,7 +4,7 @@ const cors = require('cors')
 require('dotenv').config()
 const mongoose = require('mongoose')
 require('express-async-errors')
-const { findBlogs, addBlog } = require('./controllers/blog')
+const { findBlogs, addBlog, deleteBlog, updateBlog } = require('./controllers/blog')
 const {requestLogger, unknownEndpoint, errorHandler} = require('./utils/middlewares')
 
 // DB connection
@@ -21,6 +21,8 @@ app.use(express.json())
 app.use(requestLogger)
 
 // EndPoints
+app.delete('/api/blogs/:id', deleteBlog)
+app.put('/api/blogs/:id',updateBlog)
 app.get('/api/blogs', findBlogs)
 app.post('/api/blogs', addBlog)
 
