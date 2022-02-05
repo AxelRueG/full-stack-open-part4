@@ -1,68 +1,98 @@
-const mongoose = require('mongoose')
-const supertest = require('supertest')
-const app = require('../app')
+const mongoose = require('mongoose');
+const supertest = require('supertest');
+const app = require('../app');
 
-const API = supertest(app)
+const API = supertest(app);
 
-const Blog = require('../models/blog')
+const Blog = require('../models/blog');
 
 const initialBlogs = [
-  {
-    title: 'React patterns',
-    author: 'Michael Chan',
-    url: 'https://reactpatterns.com/',
-    likes: 7,
-  },
-  {
-    title: 'Go To Statement Considered Harmful',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
-    likes: 5,
-  },
-  {
-    title: 'Canonical string reduction',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
-    likes: 12,
-  },
-  {
-    title: 'First class tests',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll',
-    likes: 10,
-  },
-  {
-    title: 'TDD harms architecture',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html',
-    likes: 0,
-  },
-  {
-    title: 'Type wars',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html',
-    likes: 2,
-  },
+	{
+		title: 'React patterns',
+		author: 'Michael Chan',
+		url: 'https://reactpatterns.com/',
+		likes: 7,
+	},
+	{
+		title: 'Go To Statement Considered Harmful',
+		author: 'Edsger W. Dijkstra',
+		url: 'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
+		likes: 5,
+	},
+	{
+		title: 'Canonical string reduction',
+		author: 'Edsger W. Dijkstra',
+		url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
+		likes: 12,
+	},
+	{
+		title: 'First class tests',
+		author: 'Robert C. Martin',
+		url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll',
+		likes: 10,
+	},
+	{
+		title: 'TDD harms architecture',
+		author: 'Robert C. Martin',
+		url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html',
+		likes: 0,
+	},
+	{
+		title: 'Type wars',
+		author: 'Robert C. Martin',
+		url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html',
+		likes: 2,
+	},
 ];
 
 jest.useRealTimers();
 
 beforeEach(async () => {
-  // jest.setTimeout(90000)
-  await Blog.deleteMany({})
-  const blogsObject = initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogsObject.map(blog => blog.save())
-  await Promise.all(promiseArray)
-},90000)
+	// jest.setTimeout(90000)
+	await Blog.deleteMany({});
+	const blogsObject = initialBlogs.map((blog) => new Blog(blog));
+	const promiseArray = blogsObject.map((blog) => blog.save());
+	await Promise.all(promiseArray);
+}, 90000);
 
-test('all blogs are returned', async () => {
-  const response = await API.get('/api/blogs')
-  expect(response.body).toHaveLength(initialBlogs.length)
-})
+describe('get methods in api/blogs', () => {
+	test('all blogs are returned', async () => {
+		const response = await API.get('/api/blogs');
+		expect(response.body).toHaveLength(initialBlogs.length);
+	});
 
-test('all blogs has an id', async () => {
-  const response = await API.get('/api/blogs')
-  expect(response.body[0].id).not.toBe(undefined)
-})
+	test('all blogs has an id', async () => {
+		const response = await API.get('/api/blogs');
+		expect(response.body[0].id).not.toBe(undefined);
+	});
+});
 
-afterAll(() => mongoose.connection.close())
+describe('post methods in api/blogs', () => {
+	const blog = {
+		title: 'yarn vs npm, todo lo que necesitas saber',
+		author: '4Developers',
+		url: 'https://tekzup.com/yarn-vs-npm-lo-necesitas-saber/',
+		likes: 143,
+	};
+
+	test('the blog is added in DB', async () => {
+		await API.post('/api/blogs')
+			.send(blog)
+
+		const result = await API.get('/api/blogs');
+    const len = initialBlogs.length + 1
+		expect(result.body).toHaveLength(len);
+	});
+
+	test('the containt is saved successfully', async () => {
+		const result = await API.post('/api/blogs')
+			.send(blog)
+      .expect(201)
+
+    // use the data of blog more the id asigned
+    const data = {...result.body, ...blog}
+		expect(result.body).toEqual(data);
+	});
+});
+
+afterAll(() => mongoose.connection.close());
