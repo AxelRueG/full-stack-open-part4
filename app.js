@@ -4,8 +4,9 @@ const cors = require('cors')
 require('dotenv').config()
 const mongoose = require('mongoose')
 require('express-async-errors')
-const { findBlogs, addBlog, deleteBlog, updateBlog } = require('./controllers/blog')
-const { getAllUser, createUser } = require('./controllers/user')
+const routerBlog = require('./routes/blog')
+const routerUser = require('./routes/user')
+const routerLogin = require('./routes/login')
 
 const {requestLogger, unknownEndpoint, errorHandler} = require('./utils/middlewares')
 
@@ -23,13 +24,9 @@ app.use(express.json())
 app.use(requestLogger)
 
 // EndPoints
-app.delete('/api/blogs/:id', deleteBlog)
-app.put('/api/blogs/:id',updateBlog)
-app.get('/api/blogs', findBlogs)
-app.post('/api/blogs', addBlog)
-
-app.post('/api/users', createUser)
-app.get('/api/users', getAllUser)
+app.use('/api/blogs', routerBlog)
+app.use('/api/users', routerUser)
+app.use('/api/login', routerLogin)
 
 // Error handles
 app.use(unknownEndpoint)
