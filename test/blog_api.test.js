@@ -5,6 +5,7 @@ const app = require('../app');
 const API = supertest(app);
 
 const Blog = require('../models/blog');
+const User = require('../models/user');
 
 const initialBlogs = [
 	{
@@ -45,12 +46,27 @@ const initialBlogs = [
 	},
 ];
 
+const UserDefault = {
+	username: 'rasta',
+	name: 'diego',
+	password: 'la_fafafa'
+}
+
+let newInitBlogs;
+
 jest.useRealTimers();
 
 beforeEach(async () => {
 	// jest.setTimeout(90000)
 	await Blog.deleteMany({});
-	const blogsObject = initialBlogs.map((blog) => new Blog(blog));
+	await User.deleteMany({})
+
+	const user = new User(UserDefault)
+	const userR = await user.save()
+
+	newInitBlogs = initialBlogs.map(blog => {return {...blog, user: userR.id}} )
+
+	const blogsObject = newInitBlogs.map((blog) => new Blog(blog));
 	const promiseArray = blogsObject.map((blog) => blog.save());
 	await Promise.all(promiseArray);
 }, 90000);
@@ -87,8 +103,9 @@ describe('adding a new blog', () => {
 		const result = await API.post('/api/blogs').send(blog).expect(201);
 
 		// use the data of blog more the id asigned
-		const data = { ...result.body, ...blog };
-		expect(result.body).toEqual(data);
+		const dataO = { username: blog.username, name: blog.name };
+		const dataR = { username: result.username, name: result.name };
+		expect(dataR).toEqual(dataO);
 	});
 
 	test('when the like number is not defined, its zero for dafault', async () => {
