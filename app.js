@@ -5,11 +5,13 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 require('express-async-errors')
 const { findBlogs, addBlog, deleteBlog, updateBlog } = require('./controllers/blog')
+const { getAllUser, createUser } = require('./controllers/user')
+
 const {requestLogger, unknownEndpoint, errorHandler} = require('./utils/middlewares')
 
 // DB connection
 let mongoUrl = process.env.DB_URI
-if (process.env.NODE_ENV === 'test') process.env.DB_TEST_URI
+if (process.env.NODE_ENV === 'test') mongoUrl = process.env.DB_TEST_URI
 mongoose
   .connect(mongoUrl)
   .then(() => console.log('DB conected'))
@@ -25,6 +27,9 @@ app.delete('/api/blogs/:id', deleteBlog)
 app.put('/api/blogs/:id',updateBlog)
 app.get('/api/blogs', findBlogs)
 app.post('/api/blogs', addBlog)
+
+app.post('/api/users', createUser)
+app.get('/api/users', getAllUser)
 
 // Error handles
 app.use(unknownEndpoint)
