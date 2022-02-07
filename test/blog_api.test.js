@@ -49,23 +49,28 @@ const initialBlogs = [
 const UserDefault = {
 	username: 'rasta',
 	name: 'diego',
-	password: 'la_fafafa'
-}
+	password: 'la_fafafa',
+};
 
-let newInitBlogs;
-
-jest.useRealTimers();
+let Token;
 
 beforeEach(async () => {
-	// jest.setTimeout(90000)
 	await Blog.deleteMany({});
-	await User.deleteMany({})
+	await User.deleteMany({});
 
-	const user = new User(UserDefault)
-	const userR = await user.save()
+	const user = await API.post('/api/users').send(UserDefault);
+	const userR = user.body;
 
-	newInitBlogs = initialBlogs.map(blog => {return {...blog, user: userR.id}} )
+	const logData = {
+		username: UserDefault.username,
+		password: UserDefault.password,
+	};
+	const login = await API.post('/api/login').send(logData);
+	Token = login.body;
 
+	const newInitBlogs = initialBlogs.map((blog) => {
+		return { ...blog, user: userR.id };
+	});
 	const blogsObject = newInitBlogs.map((blog) => new Blog(blog));
 	const promiseArray = blogsObject.map((blog) => blog.save());
 	await Promise.all(promiseArray);
@@ -92,7 +97,10 @@ describe('adding a new blog', () => {
 	};
 
 	test('the blog is added in DB', async () => {
-		await API.post('/api/blogs').send(blog);
+		await API.post('/api/blogs')
+			.set('Authorization', 'bearer ' + Token.token)
+			.send(blog)
+			.expect(201);
 
 		const result = await API.get('/api/blogs');
 		const len = initialBlogs.length + 1;
@@ -100,7 +108,10 @@ describe('adding a new blog', () => {
 	});
 
 	test('the containt is saved successfully', async () => {
-		const result = await API.post('/api/blogs').send(blog).expect(201);
+		const result = await API.post('/api/blogs')
+			.set('Authorization', 'bearer ' + Token.token)
+			.send(blog)
+			.expect(201);
 
 		// use the data of blog more the id asigned
 		const dataO = { username: blog.username, name: blog.name };
@@ -110,14 +121,24 @@ describe('adding a new blog', () => {
 
 	test('when the like number is not defined, its zero for dafault', async () => {
 		const data = { ...blog, likes: undefined };
-		const result = await API.post('/api/blogs').send(data).expect(201);
+		const result = await API.post('/api/blogs')
+			.set('Authorization', 'bearer ' + Token.token)
+			.send(data)
+			.expect(201);
 		expect(result.body.likes).toBe(0);
 	});
 
 	test('when title and url its not defined, throw status 400', async () => {
 		const data = { ...blog, title: '', url: '' };
-		await API.post('/api/blogs').send(data).expect(400);
+		await API.post('/api/blogs')
+			.set('Authorization', 'bearer ' + Token.token)
+			.send(data)
+			.expect(400);
 	});
+
+	test('when try to add a new blog without token', async () => {
+		await API.post('/api/blogs').send(blog).expect(401)
+	})
 });
 
 describe('deleting a blog', () => {

@@ -8,6 +8,8 @@ const findBlogs = async (request, response) => {
 };
 
 const addBlog = async (request, response) => {
+	if (!request.token)
+		return response.status(401).json({ error: 'token missing or invalid' });
 	const decodedToken = jwt.verify(request.token, process.env.SECRET);
 	if (!decodedToken.id) {
 		return response.status(401).json({ error: 'token missing or invalid' });
@@ -32,9 +34,9 @@ const deleteBlog = async (req, res) => {
 	const blog = await Blog.findById(id);
 
 	if (blog.user.toString() !== token.id.toString())
-		return res.status(401).json({error: 'unauthorized'})
+		return res.status(401).json({ error: 'unauthorized' });
 
-	await Blog.findByIdAndDelete(id)
+	await Blog.findByIdAndDelete(id);
 	res.status(200).end();
 };
 
