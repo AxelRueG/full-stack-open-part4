@@ -8,7 +8,7 @@ const routerBlog = require('./routes/blog')
 const routerUser = require('./routes/user')
 const routerLogin = require('./routes/login')
 
-const {requestLogger, unknownEndpoint, errorHandler} = require('./utils/middlewares')
+const {requestLogger, unknownEndpoint, errorHandler, getTokenFrom} = require('./utils/middlewares')
 
 // DB connection
 let mongoUrl = process.env.DB_URI
@@ -22,6 +22,7 @@ mongoose
 app.use(cors())
 app.use(express.json())
 app.use(requestLogger)
+app.use(getTokenFrom)
 
 // EndPoints
 app.use('/api/blogs', routerBlog)

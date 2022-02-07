@@ -7,33 +7,34 @@ const findBlogs = async (request, response) => {
 	response.json(blogs);
 };
 
-const getTokenFrom = (request) => {
-	const authorization = request.get('authorization');
-	if (authorization && authorization.toLowerCase().startsWith('bearer '))
-		return authorization.substring(7);
-	return null;
-};
-
 const addBlog = async (request, response) => {
-	const token = getTokenFrom(request);
-	const decodedToken = jwt.verify(token, process.env.SECRET);
-	if (!(token && decodedToken.id)) {
+	const decodedToken = jwt.verify(request.token, process.env.SECRET);
+	if (!decodedToken.id) {
 		return response.status(401).json({ error: 'token missing or invalid' });
 	}
 	const user = await User.findById(decodedToken.id);
 
 	const blog = new Blog({ ...request.body, user: user.id });
-	
+
 	const result = await blog.save();
 	const blogs = user.blogs.concat(result.id);
-	await User.findByIdAndUpdate(user.id, {blogs}, {new: true});
+	await User.findByIdAndUpdate(user.id, { blogs }, { new: true });
 
 	response.status(201).json(result);
 };
 
 const deleteBlog = async (req, res) => {
+	const token = jwt.verify(req.token, process.env.SECRET);
+	if (!token.id)
+		return response.status(401).json({ error: 'token missing or invalid' });
+
 	const { id } = req.params;
-	await Blog.findByIdAndDelete(id);
+	const blog = await Blog.findById(id);
+
+	if (blog.user.toString() !== token.id.toString())
+		return res.status(401).json({error: 'unauthorized'})
+
+	await Blog.findByIdAndDelete(id)
 	res.status(200).end();
 };
 
