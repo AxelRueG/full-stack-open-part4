@@ -22,7 +22,12 @@ const addBlog = async (request, response) => {
 	const blogs = user.blogs.concat(result.id);
 	await User.findByIdAndUpdate(user.id, { blogs }, { new: true });
 
-	response.status(201).json(result);
+	const newBlog = await Blog.findById(result._id).populate('user', {
+		username: 1,
+		name: 1,
+	});
+
+	response.status(201).json(newBlog);
 };
 
 const deleteBlog = async (req, res) => {
